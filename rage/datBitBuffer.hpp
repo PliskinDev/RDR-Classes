@@ -18,72 +18,44 @@ namespace rage
 			m_FlagBits = read ? 1 : 0;
 		}
 
-		static void ReadBitsSingle(uint8_t* data, int* out, int size, int offset)
+		static void ReadBitsSingle(const uint8_t* data, int* out, int size, int offset)
 		{
-			int v5;           // r11d
-			int v6;           // ebx
-			uint8_t* v7;      // r14
-			char v8;          // cl
-			int v9;           // r11d
-			unsigned int v10; // r8d
-			int v11;          // esi
-			__int64 v12;      // r9
+			uint8_t* currentByte = const_cast<uint8_t*>(data) + (offset >> 3);
+			int bitOffset = offset & 7;
 
-			v5 = offset;
-			v6 = 1;
-			v7 = &data[offset >> 3];
-			v8 = offset & 7;
-			if (size > 0)
-				v5 = size + offset - 1;
-			v9 = (v5 >> 3) - (offset >> 3);
-			v10 = (unsigned __int8)(*v7 << v8);
-			v11 = 8;
-			if (size > 8)
+			uint32_t result = *currentByte << bitOffset;
+			int remainingBits = 8 - bitOffset;
+
+			for (int i = 1; i < (size + 7) / 8; ++i)
 			{
-				v12 = 1i64;
-				do
-				{
-					if (v12 > v9)
-						break;
-					++v6;
-					v10 = (v10 << 8) | (v7[v12++] << v8);
-					v11 += 8;
-				} while (v11 < size);
+				result |= static_cast<uint32_t>(currentByte[i]) << (bitOffset + 8 * i);
 			}
-			if (v6 <= v9)
-				v10 |= v7[v6] >> (8 - v8);
-			*out = v10 >> (((size + 7) & 0xF8) - size);
+
+			*out = result >> (32 - size);
 		}
 
 		static void WriteBitsSingle(uint8_t* data, int value, int size, int offset)
 		{
-			uint8_t* v4;     // r10
-			int v5;          // r9d
-			unsigned int v6; // r11d
-			uint8_t* v7;     // r10
-			unsigned int v8; // r11d
-			int v9;          // ebx
-			__int64 v10;     // rdx
-			char v11;        // cl
+			uint8_t* currentByte = &data[static_cast<__int64>(offset) >> 3];
+			int bitOffset = offset & 7;
+			unsigned int mask = -1u << (32 - size);
 
-			v4 = &data[(__int64)offset >> 3];
-			v5 = offset & 7;
-			v6 = value << (32 - size);
-			*v4 = ((v6 >> 24) >> v5) | *v4 & ~((unsigned int)(-1 << (32 - size)) >> 24 >> v5);
-			v7 = v4 + 1;
-			v8 = v6 << (8 - v5);
-			v9 = -1 << (32 - size) << (8 - v5);
-			if (8 - v5 < size)
+			value <<= (32 - size);
+
+			*currentByte = ((*currentByte >> (8 - bitOffset)) << (8 - bitOffset)) | ((value >> 24) >> bitOffset);
+			
+			uint8_t* nextByte = currentByte + 1;
+			unsigned int remainder = value << (8 - bitOffset);
+
+			if (8 - bitOffset < size)
 			{
-				v10 = ((unsigned int)(size - (8 - v5) - 1) >> 3) + 1;
+				size -= 8 - bitOffset;
 				do
 				{
-					v11 = (v8 >> 24) | *v7 & ~(v9 >> 24);
-					v8 <<= 8;
-					*v7++ = v11;
-					v9 <<= 8;
-					--v10;
-				} while (v10);
+					*nextByte++ = remainder >> 24;
+					remainder <<= 8;
+					size -= 8;
+				} while (size > 0);
 			}
 		}
 
