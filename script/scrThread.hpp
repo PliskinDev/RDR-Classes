@@ -3,6 +3,12 @@
 
 namespace rage
 {
+    struct scrDGVariableInfo
+    {
+        void* m_data;                 // 0x0000
+        void* m_next;                 // 0x0008
+    };
+
     class scrThread
     {
     public:
