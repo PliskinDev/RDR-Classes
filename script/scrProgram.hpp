@@ -1,8 +1,10 @@
 #pragma once
 
+#include "../base/pgBase.hpp"
+
 namespace rage
 {
-    class scrProgram
+    class scrProgram : public pgBase
     {
     public:
         
