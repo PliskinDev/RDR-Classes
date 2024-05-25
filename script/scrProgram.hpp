@@ -144,7 +144,7 @@ namespace rage
         const char** m_string_heaps;                // 0x0050
         uint32_t m_size_of_string_heap;             // 0x0058
         uint8_t m_has_program_break_points[11];     // 0x005C
-        char pad_0068[4];                           // 0x0060
+        char pad_0060[4];                           // 0x0060
         char pad_0064[4];                           // 0x0064
         char pad_0068[4];                           // 0x0068
     protected:
